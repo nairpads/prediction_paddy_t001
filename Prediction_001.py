@@ -34,15 +34,15 @@ if train_file is not None and test_file is not None:
         if 'fare' in dataset.columns:
             dataset['fare'].fillna(dataset['fare'].median(), inplace=True)
 
-        # Map 'sex' safely
+        # ✅ Map 'sex' safely, even if values aren't strings
         if 'sex' in dataset.columns:
-            dataset['sex'] = dataset['sex'].str.lower().map({'male': 0, 'female': 1})
+            dataset['sex'] = dataset['sex'].astype(str).str.lower().map({'male': 0, 'female': 1})
             dataset['sex'].fillna(-1, inplace=True)
             dataset['sex'] = dataset['sex'].astype(int)
 
-        # Map 'embarked' safely
+        # ✅ Map 'embarked' safely
         if 'embarked' in dataset.columns:
-            dataset['embarked'] = dataset['embarked'].str.upper().apply(
+            dataset['embarked'] = dataset['embarked'].astype(str).str.upper().apply(
                 lambda x: {'S': 0, 'C': 1, 'Q': 2}.get(x, -1)
             ).astype(int)
 
