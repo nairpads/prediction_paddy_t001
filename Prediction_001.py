@@ -5,6 +5,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
+import io
 
 # Title
 st.title("🚢 Titanic Survival Prediction")
@@ -34,13 +35,13 @@ if train_file is not None and test_file is not None:
         if 'fare' in dataset.columns:
             dataset['fare'].fillna(dataset['fare'].median(), inplace=True)
 
-        # ✅ Map 'sex' safely, even if values aren't strings
+        # Map 'sex' safely, even if values aren't strings
         if 'sex' in dataset.columns:
             dataset['sex'] = dataset['sex'].astype(str).str.lower().map({'male': 0, 'female': 1})
             dataset['sex'].fillna(-1, inplace=True)
             dataset['sex'] = dataset['sex'].astype(int)
 
-        # ✅ Map 'embarked' safely
+        # Map 'embarked' safely
         if 'embarked' in dataset.columns:
             dataset['embarked'] = dataset['embarked'].astype(str).str.upper().apply(
                 lambda x: {'S': 0, 'C': 1, 'Q': 2}.get(x, -1)
@@ -83,14 +84,18 @@ if train_file is not None and test_file is not None:
         "Survived": final_predictions
     })
 
-    # Provide download
-    st.subheader("📥 Download Submission File")
-    csv = submission.to_csv(index=False).encode('utf-8')
+    # Save as Excel to in-memory buffer
+    excel_buffer = io.BytesIO()
+    with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
+        submission.to_excel(writer, sheet_name='Predictions', index=False)
+
+    # Provide Excel download
+    st.subheader("📥 Download Submission File (Excel)")
     st.download_button(
-        label="Download submission.csv",
-        data=csv,
-        file_name='submission.csv',
-        mime='text/csv'
+        label="Download submission.xlsx",
+        data=excel_buffer.getvalue(),
+        file_name='submission.xlsx',
+        mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
 
 else:
