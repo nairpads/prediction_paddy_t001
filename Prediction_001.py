@@ -17,25 +17,38 @@ test_file = st.file_uploader("Upload test.csv", type=["csv"])
 if train_file is not None and test_file is not None:
     train = pd.read_csv(train_file)
     test = pd.read_csv(test_file)
-    
+
     # Combine for preprocessing
     combine = [train, test]
 
     for dataset in combine:
-        dataset['Age'].fillna(dataset['Age'].median(), inplace=True)
-        dataset['Embarked'].fillna(dataset['Embarked'].mode()[0], inplace=True)
-    test['Fare'].fillna(test['Fare'].median(), inplace=True)
+        # Fill missing values
+        if 'Age' in dataset.columns:
+            dataset['Age'].fillna(dataset['Age'].median(), inplace=True)
+        if 'Embarked' in dataset.columns:
+            dataset['Embarked'].fillna(dataset['Embarked'].mode()[0], inplace=True)
+        if 'Fare' in dataset.columns:
+            dataset['Fare'].fillna(dataset['Fare'].median(), inplace=True)
 
-    for dataset in combine:
-        dataset['Sex'] = dataset['Sex'].map({'male': 0, 'female': 1}).astype(int)
-        dataset['Embarked'] = dataset['Embarked'].map({'S': 0, 'C': 1, 'Q': 2}).astype(int)
+        # Map 'Sex' safely
+        if 'Sex' in dataset.columns:
+            dataset['Sex'] = dataset['Sex'].str.lower().map({'male': 0, 'female': 1})
+            dataset['Sex'].fillna(-1, inplace=True)
+            dataset['Sex'] = dataset['Sex'].astype(int)
+
+        # Map 'Embarked' safely
+        if 'Embarked' in dataset.columns:
+            dataset['Embarked'] = dataset['Embarked'].str.upper().apply(
+                lambda x: {'S': 0, 'C': 1, 'Q': 2}.get(x, -1)
+            ).astype(int)
 
     # Save PassengerId for submission
     test_passenger_id = test['PassengerId']
 
     # Drop unwanted columns
-    train = train.drop(['Name', 'Ticket', 'Cabin', 'PassengerId'], axis=1)
-    test = test.drop(['Name', 'Ticket', 'Cabin', 'PassengerId'], axis=1)
+    drop_cols = ['Name', 'Ticket', 'Cabin', 'PassengerId']
+    train = train.drop(columns=[col for col in drop_cols if col in train.columns])
+    test = test.drop(columns=[col for col in drop_cols if col in test.columns])
 
     # Features and target
     X = train.drop("Survived", axis=1)
@@ -75,3 +88,6 @@ if train_file is not None and test_file is not None:
         file_name='submission.csv',
         mime='text/csv'
     )
+else:
+    st.info("Please upload both training and test files.")
+
