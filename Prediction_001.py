@@ -42,8 +42,8 @@ if train_file is not None and test_file is not None:
                 lambda x: {'S': 0, 'C': 1, 'Q': 2}.get(x, -1)
             ).astype(int)
 
-    # Save PassengerId for submission
-    test_passenger_id = test['PassengerId']
+    # ✅ Save PassengerId before dropping
+    test_passenger_id = test['PassengerId'].copy()
 
     # Drop unwanted columns
     drop_cols = ['Name', 'Ticket', 'Cabin', 'PassengerId']
@@ -68,8 +68,8 @@ if train_file is not None and test_file is not None:
     acc_rf = accuracy_score(y_val, y_pred_rf)
 
     # Show accuracy
-    st.subheader("Model Accuracy")
-    st.write(f"📊 Logistic Regression: **{acc_log:.4f}**")
+    st.subheader("📊 Model Accuracy")
+    st.write(f"🧮 Logistic Regression: **{acc_log:.4f}**")
     st.write(f"🌲 Random Forest: **{acc_rf:.4f}**")
 
     # Final prediction and submission
@@ -89,5 +89,4 @@ if train_file is not None and test_file is not None:
         mime='text/csv'
     )
 else:
-    st.info("Please upload both training and test files.")
-
+    st.info("👋 Please upload both training and test CSV files to get started.")
